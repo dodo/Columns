@@ -18,6 +18,7 @@ $(document).bind('keydown', 'left', keydown);
 $(document).bind('keydown', 'down', keydown);
 $(document).bind('keydown', 'right', keydown);
 
+
 var pick = function(list) {
     return list[Math.round((list.length-1)*Math.random())];
 };
@@ -121,8 +122,22 @@ GameBoard = function GameBoard(div, theme) {
     this.next = new Block(this, {y:2, x:WIDTH+1});
     this.interval = {
             falling: setInterval(function(){that.falling()}, 650),
-            input:   setInterval(function(){that.input()}, 42),
+            input:   setInterval(function(){that.input()}, 56),
         };
+    $(document).bind('keydown', 'x', function () {
+        if (that.state === 0) {
+            var cur = that.current;
+            cur.tiles.unshift(cur.tiles.pop());
+            cur.update();
+        }
+    });
+    $(document).bind('keydown', 'c', function () {
+        if (that.state === 0) {
+            var cur = that.current;
+            cur.tiles.push(cur.tiles.shift());
+            cur.update();
+        }
+    });
 };
 
 GameBoard.prototype.falling = function () {
