@@ -2,7 +2,6 @@ $(document).ready(function () {
 
 // constants
 
-TILE_SIZE = 23;
 WIDTH = 7;
 HEIGHT = 18;
 
@@ -50,18 +49,19 @@ var trace = function (table, pos) {
 
 Tile = function Tile(gb, name) {
     this._board = gb.gui.board;
+    this.size = gb.tilesize;
     this.name = name;
     this.img = $("<img>").attr({
             src:"/img/"+gb.theme+"/"+name+".png",
-            width:TILE_SIZE,
-            height:TILE_SIZE
+            width:gb.tilesize,
+            height:gb.tilesize
         }).css("position","absolute");
     this._board.append(this.img);
 };
 
 Tile.prototype.pos = function (pos) {
-    this.img.css({top:pos.y*TILE_SIZE+this._board.offset().top+1,
-                 left:pos.x*TILE_SIZE+this._board.offset().left+1});
+    this.img.css({top:pos.y*this.size+this._board.offset().top+1,
+                 left:pos.x*this.size+this._board.offset().left+1});
 };
 
 
@@ -81,24 +81,25 @@ Block.prototype.update = function (dpos) {
 };
 
 
-GameBoard = function GameBoard(div, theme) {
+GameBoard = function GameBoard(div, tilesize, theme, islocal) {
+    this.tilesize = tilesize;
     this.theme = theme;
     this.gui = {
         div: $(div).css({
-                width: TILE_SIZE*(WIDTH+2)+4,
-                height:TILE_SIZE*HEIGHT,
+                width: tilesize*(WIDTH+2)+4,
+                height:tilesize*HEIGHT,
             }),
         board: $("<div>").css({
                 border: "1px solid #666",
-                width: TILE_SIZE*WIDTH,
-                height: TILE_SIZE*HEIGHT,
+                width: tilesize*WIDTH,
+                height: tilesize*HEIGHT,
                 float: "left",
             }),
         next: $("<div>").css({
                 border: "1px solid #ccc",
-                width: TILE_SIZE,
-                height: TILE_SIZE*3,
-                marginLeft: TILE_SIZE*(WIDTH+1),
+                width: tilesize,
+                height: tilesize*3,
+                marginLeft: tilesize*(WIDTH+1),
             }),
         a: $("<img>").attr("src", "/img/"+theme+"/a.png").css("display","none"),
         b: $("<img>").attr("src", "/img/"+theme+"/b.png").css("display","none"),
@@ -114,30 +115,32 @@ GameBoard = function GameBoard(div, theme) {
                 .append(this.gui.d)
                 .append(this.gui.e);
 
-    var that = this;
-    this.state = 0;
-    this.table = [];
-    for(var i=0;i<WIDTH;++i) this.table.push(new Array(18));
-    this.current = new Block(this, {y:2, x:3});
-    this.next = new Block(this, {y:2, x:WIDTH+1});
-    this.interval = {
-            falling: setInterval(function(){that.falling()}, 650),
-            input:   setInterval(function(){that.input()}, 56),
-        };
-    $(document).bind('keydown', 'x', function () {
-        if (that.state === 0) {
-            var cur = that.current;
-            cur.tiles.unshift(cur.tiles.pop());
-            cur.update();
-        }
-    });
-    $(document).bind('keydown', 'c', function () {
-        if (that.state === 0) {
-            var cur = that.current;
-            cur.tiles.push(cur.tiles.shift());
-            cur.update();
-        }
-    });
+    if(islocal) {
+        var that = this;
+        this.state = 0;
+        this.table = [];
+        for(var i=0;i<WIDTH;++i) this.table.push(new Array(18));
+        this.current = new Block(this, {y:2, x:3});
+        this.next = new Block(this, {y:2, x:WIDTH+1});
+        this.interval = {
+                falling: setInterval(function(){that.falling()}, 650),
+                input:   setInterval(function(){that.input()}, 56),
+            };
+        $(document).bind('keydown', 'x', function () {
+            if (that.state === 0) {
+                var cur = that.current;
+                cur.tiles.unshift(cur.tiles.pop());
+                cur.update();
+            }
+        });
+        $(document).bind('keydown', 'c', function () {
+            if (that.state === 0) {
+                var cur = that.current;
+                cur.tiles.push(cur.tiles.shift());
+                cur.update();
+            }
+        });
+    }
 };
 
 GameBoard.prototype.falling = function () {
@@ -221,7 +224,7 @@ GameBoard.prototype.input = function () {
 
 var test = function () {
     console.log("testing …");
-    var gb = new GameBoard(".gameboard", "plain");
+    var gb = new GameBoard(".gameboard", 23, "plain", true);
 };
 
 test();
