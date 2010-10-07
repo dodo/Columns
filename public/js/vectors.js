@@ -12,6 +12,15 @@ Vector = function Vector(keys, i) {
     });
 };
 
+Vector.prototype.equal = function (v) {
+    var self = this;
+    var restult = true;
+    self.keys.forEach(function (key) {
+        result = result && self[key] == v[key];
+    });
+    return result;
+};
+
 Vector.prototype.tolist = function () {
     var self = this;
     var result = [];
