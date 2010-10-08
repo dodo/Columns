@@ -68,7 +68,7 @@ Tile.prototype.pos = function (pos) {
 Block = function Block(gb, pos) {
     this.gb = gb;
     this.pos = Vector2D(pos);
-    var names = ["a", "b", "c", "d", "e"];
+    var names = ["a", "b", "c", "d", "e", "f"].slice(0,gb.difficulty);
     this.tiles = [new Tile(gb, pick(names)),
                   new Tile(gb, pick(names)),
                   new Tile(gb, pick(names))];
@@ -81,7 +81,8 @@ Block.prototype.update = function (dpos) {
 };
 
 
-GameBoard = function GameBoard(div, tilesize, theme, islocal) {
+GameBoard = function GameBoard(div, tilesize, theme, difficulty, islocal) {
+    this.difficulty = difficulty || 6;
     this.tilesize = tilesize;
     this.theme = theme;
     this.gui = {
@@ -224,7 +225,7 @@ GameBoard.prototype.input = function () {
 
 var test = function () {
     console.log("testing …");
-    var gb = new GameBoard(".gameboard", 23, "plain", true);
+    var gb = new GameBoard(".gameboard", 23, "web", 6, true);
 };
 
 test();

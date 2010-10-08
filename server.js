@@ -32,6 +32,15 @@ _ = function () {
     app.get('/', function(req, res){
         res.render('index.haml', {
             locals: {
+                jsfile: "start",
+                title: "Columns",
+            }
+        });
+    });
+
+    app.get('/single', function(req, res){
+        res.render('single.haml', {
+            locals: {
                 jsfile: "columns",
                 title: "Columns",
             }
