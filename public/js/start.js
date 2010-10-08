@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-var selected = "plain";
+var theme = "plain";
 var difficulty = 6;
 
 ["plain", "web"].forEach(function (name) {
@@ -10,9 +10,9 @@ var difficulty = 6;
             width: 6*18,
             display:"block"
     }).hover(function () { // in
-        $(this).css({border:"5px solid "+(selected===name&&"red"||"gold")});
+        $(this).css({border:"5px solid "+(theme===name&&"red"||"gold")});
     }, function () { // out
-        $(this).css({border:"5px solid "+(selected===name&&"orange"||"white")});
+        $(this).css({border:"5px solid "+(theme===name&&"orange"||"white")});
     });
     ["a", "b", "c", "d", "e", "f"].forEach(function (pn) {
         $("<img>").attr({
@@ -22,8 +22,8 @@ var difficulty = 6;
         }).appendTo(link);
     });
     link.click(function () {
-        $("#"+selected).css({border:"5px solid white"});
-        selected = name;
+        $("#"+theme).css({border:"5px solid white"});
+        theme = name;
         $(this).css({border:"5px solid red"});
         return false;
     }).appendTo($(".themes"));
@@ -53,5 +53,10 @@ $("#plain").css({border:"5px solid orange"});
 });
 
 $("#dif6").css({border:"5px solid orange"});
+
+$("#start").click(function () {
+    $(this).attr("href", "/single?theme="+theme+"&difficulty="+difficulty);
+    return true;
+});
 
 });

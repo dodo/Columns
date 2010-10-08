@@ -2,7 +2,7 @@ $(document).ready(function () {
 
 // constants
 
-WIDTH = 7;
+WIDTH = 6;
 HEIGHT = 18;
 
 // helpers
@@ -17,6 +17,14 @@ $(document).bind('keydown', 'left', keydown);
 $(document).bind('keydown', 'down', keydown);
 $(document).bind('keydown', 'right', keydown);
 
+var getUrlVars = function () {
+    var map = {};
+    var parts = window.location.search.replace(/[?&]+([^=&]+)(=[^&]*)?/gi,
+        function (m, key, value) {
+            map[key] = (value === undefined) ? true : value.substring(1);
+        });
+    return map;
+};
 
 var pick = function(list) {
     return list[Math.round((list.length-1)*Math.random())];
@@ -225,7 +233,10 @@ GameBoard.prototype.input = function () {
 
 var test = function () {
     console.log("testing …");
-    var gb = new GameBoard(".gameboard", 23, "web", 6, true);
+    var vars = getUrlVars();
+    var d = vars.difficulty || 6;
+    if (d < 3) d = 3; else if (d > 6) d = 6;
+    var gb = new GameBoard(".gameboard", 23, vars.theme || "plain", d, true);
 };
 
 test();
