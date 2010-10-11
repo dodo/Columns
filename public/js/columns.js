@@ -7,6 +7,10 @@ HEIGHT = 18;
 
 // helpers
 
+var _ef = function(){};
+
+if(typeof(console)==='undefined')console={log:_ef,error:_ef,warn:_ef, info:_ef};
+
 var KEYS = {37:0, 39:0, 40:0};
 var keydown = function (e) {KEYS[e.which] = 1;};
 var keyup   = function (e) {KEYS[e.which] = 0;};
@@ -47,7 +51,7 @@ var trace = function (table, pos) {
         }
         if(i>3) {
             l = l.concat(d[i-4]);
-        if (l.length > 1) list = list.concat(l);
+            if (l.length > 1) list = list.concat(l);
         } else d.push(l);
     }
     return list;
@@ -55,8 +59,7 @@ var trace = function (table, pos) {
 
 // classes
 
-var _ef = function(){};
-var Dummy = {update:_ef,next:_ef,check:_ef,shift:_ef,};
+Dummy = {update:_ef,next:_ef,check:_ef,shift:_ef,points:_ef,};
 
 Tile = function Tile(gb, name) {
     this._board = gb.gui.board;
@@ -97,6 +100,9 @@ GameBoard = function GameBoard(cb, div, tilesize, theme, difficulty, islocal) {
     this.tilesize = tilesize;
     this.cb = cb || Dummy;
     this.theme = theme;
+    this._combos = 0;
+    this._points = 0;
+    this.points = 0;
     this.gui = {
         div: $(div).css({
                 width: tilesize*(WIDTH+2)+4,
@@ -188,10 +194,12 @@ GameBoard.prototype.doCheck = function () {
             var p =Vector2D(cur.pos).sub({x:0,y:i});
             this.table[p.x][p.y] = cur.tiles[i];
         }
+        this.state = 1;
+        this.cb.check();
+        this._combos = 0;
+        this._points = 0;
+        this.check();
     }
-    this.state = 1;
-    this.cb.check();
-    this.check();
 };
 
 GameBoard.prototype.check = function (tiles) {
@@ -206,9 +214,25 @@ GameBoard.prototype.check = function (tiles) {
         var list = [];
         for(var i=0,il=tiles.length;i<il;++i) {
             var l = trace(this.table, tiles[i]);
-            if(l.length>2)  list.push(l);
+            if (l.length > 2) {
+                var b = false;
+                for(var n=0,nl=list.length;n<nl;++n) {
+                    var _b = false;
+                    var s = 0;
+                    for(var j=0,jl=l.length;j<jl;++j) {
+                        for(var k=0, kl=list[n].length;k<kl;++k) {
+                            if (list[n][k].equal(l[j])) s++;
+                        }
+                    }
+                    b = s === l.length;
+                    if (b) break;
+                }
+                if (!b) list.push(l);
+            }
         }
+        if (list.length) this._combos += list.length;
         for(var i=0,il=list.length;i<il;++i) {
+            if (list[i].length > 3) this._points += list[i].length - 3;
             for(var n=0,nl=list[i].length;n<nl;++n) {
                 var p = list[i][n];
                 if(this.table[p.x][p.y]) {
@@ -217,7 +241,7 @@ GameBoard.prototype.check = function (tiles) {
                 }
             }
         }
-        setTimeout(function(){that.cleanup()},333)
+        setTimeout(function(){that.cleanup()}, 333);
     }
 };
 
@@ -226,6 +250,11 @@ GameBoard.prototype.genNext = function (a, b, c) {
     if (this.current) this.current.update({y:0, x:-WIDTH+2});
     this.next = new Block(this, {y:2, x:WIDTH+1}, a, b, c);
     this.cb.next(this.next.tiles[0].name,this.next.tiles[1].name,this.next.tiles[2].name);
+    if (this._combos) this._combos--;
+    this.points += this._combos*10 + this._points;
+    if (this._combos || this._points) this.cb.points(this._combos, this._points);
+    this._combos = 0;
+    this._points = 0;
     this.state = 0;
 };
 
@@ -236,7 +265,7 @@ GameBoard.prototype.cleanup = function () {
         for(var y=HEIGHT-1;y>=0;--y) {
             if(this.table[x][y]) {
                 if(offset) {
-                    list.push({x:x,y:y+offset});
+                    list.push(Vector2D({x:x,y:y+offset}));
                     this.table[x][y].pos({x:x,y:y+offset});
                     this.table[x][y+offset] = this.table[x][y];
                     this.table[x][y] = undefined;

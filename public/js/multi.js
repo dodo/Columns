@@ -8,6 +8,11 @@ var genId = function () {
 
 // settings
 
+if (!WebSocket) {
+    $("#name").text("honk … this games uses websocket … so get a real browser!");
+    return;
+}
+
 var localgb;
 var players = {};
 var id = genId();
@@ -99,6 +104,9 @@ var run = function () {
         },
         next: function (a, b, c) {
             ws.send("nx:"+id+":"+a+":"+b+":"+c);
+        },
+        points: function () {
+            $("#name").text(name+" - "+localgb.points+" points");
         },
     };
     $("#loading").remove();

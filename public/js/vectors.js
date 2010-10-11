@@ -14,7 +14,7 @@ Vector = function Vector(keys, i) {
 
 Vector.prototype.equal = function (v) {
     var self = this;
-    var restult = true;
+    var result = true;
     self.keys.forEach(function (key) {
         result = result && self[key] == v[key];
     });
