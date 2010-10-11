@@ -4,22 +4,7 @@ var theme = "plain";
 var difficulty = 6;
 
 
-var ws = new WebSocket('ws://' + document.location.host + '/');
-ws.onopen = function() {
-    console.log('open');
-};
-ws.onmessage = function(ev) {
-    console.log('msg: '+ev.data);
-};
-ws.onclose = function() {
-    console.log('close');
-};
-ws.onerror = function(e) {
-    console.error(e);
-};
-
-
-["plain", "web"].forEach(function (name) {
+["plain", "web", "fun"].forEach(function (name) {
     var link = $("<a>").attr({href:"#", id:name}).css({
             border:"5px solid white",
             padding:"6px",
