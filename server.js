@@ -56,6 +56,15 @@ _ = function () {
         });
     });
 
+    app.get('/multi', function(req, res){
+        res.render('multi.haml', {
+            locals: {
+                jsfiles: ["columns", "multi"],
+                title: "Columns",
+            }
+        });
+    });
+
     // start
 
     if (!module.parent) {

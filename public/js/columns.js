@@ -55,6 +55,9 @@ var trace = function (table, pos) {
 
 // classes
 
+var _ef = function(){};
+var Dummy = {update:_ef,next:_ef,check:_ef,shift:_ef,};
+
 Tile = function Tile(gb, name) {
     this._board = gb.gui.board;
     this.size = gb.tilesize;
@@ -73,13 +76,13 @@ Tile.prototype.pos = function (pos) {
 };
 
 
-Block = function Block(gb, pos) {
+Block = function Block(gb, pos, a, b, c) {
     this.gb = gb;
     this.pos = Vector2D(pos);
     var names = ["a", "b", "c", "d", "e", "f"].slice(0,gb.difficulty);
-    this.tiles = [new Tile(gb, pick(names)),
-                  new Tile(gb, pick(names)),
-                  new Tile(gb, pick(names))];
+    this.tiles = [new Tile(gb, a || pick(names)),
+                  new Tile(gb, b || pick(names)),
+                  new Tile(gb, c || pick(names))];
     this.update();
 };
 
@@ -89,9 +92,10 @@ Block.prototype.update = function (dpos) {
 };
 
 
-GameBoard = function GameBoard(div, tilesize, theme, difficulty, islocal) {
+GameBoard = function GameBoard(cb, div, tilesize, theme, difficulty, islocal) {
     this.difficulty = difficulty || 6;
     this.tilesize = tilesize;
+    this.cb = cb || Dummy;
     this.theme = theme;
     this.gui = {
         div: $(div).css({
@@ -124,46 +128,70 @@ GameBoard = function GameBoard(div, tilesize, theme, difficulty, islocal) {
                 .append(this.gui.d)
                 .append(this.gui.e);
 
-    if(islocal) {
+    this._shift = 0;
+    this.state = 0;
+    this.table = [];
+    for(var i=0;i<WIDTH;++i) this.table.push(new Array(18));
+    if((this._islocal = islocal)) {
         var that = this;
-        this.state = 0;
-        this.table = [];
-        for(var i=0;i<WIDTH;++i) this.table.push(new Array(18));
         this.current = new Block(this, {y:2, x:3});
         this.next = new Block(this, {y:2, x:WIDTH+1});
+        this.status();
         this.interval = {
                 falling: setInterval(function(){that.falling()}, 650),
                 input:   setInterval(function(){that.input()}, 56),
             };
-        $(document).bind('keydown', 'x', function () {
-            if (that.state === 0) {
-                var cur = that.current;
-                cur.tiles.unshift(cur.tiles.pop());
-                cur.update();
-            }
-        });
-        $(document).bind('keydown', 'c', function () {
-            if (that.state === 0) {
-                var cur = that.current;
-                cur.tiles.push(cur.tiles.shift());
-                cur.update();
-            }
-        });
+        $(document).bind('keydown', 'x', function () {that.shiftLeft()});
+        $(document).bind('keydown', 'c', function () {that.shiftRight()});
+    }
+};
+
+GameBoard.prototype.status = function () {
+    this.cb.next(this.current.tiles[0].name,this.current.tiles[1].name,this.current.tiles[2].name);
+    this.cb.next(this.next.tiles[0].name,this.next.tiles[1].name,this.next.tiles[2].name);
+};
+
+GameBoard.prototype.shiftLeft = function () {
+    if (this.state === 0) {
+        this._shift--;
+        var cur = this.current;
+        cur.tiles.unshift(cur.tiles.pop());
+        cur.update();
+    }
+};
+
+GameBoard.prototype.shiftRight = function () {
+    if (this.state === 0) {
+        this._shift++;
+        var cur = this.current;
+        cur.tiles.push(cur.tiles.shift());
+        cur.update();
     }
 };
 
 GameBoard.prototype.falling = function () {
     if(this.state === 0) {
         var cur = this.current;
-        if(cur.pos.y === HEIGHT-1 || this.table[cur.pos.x][cur.pos.y+1]) {
-            for(var i=0;i<3;++i) {
-                var p =Vector2D(cur.pos).sub({x:0,y:i});
-                this.table[p.x][p.y] = cur.tiles[i];
-            }
-            this.state = 1;
-            this.check();
-        } else cur.update({x:0,y:1});
+        if(cur.pos.y === HEIGHT-1 || this.table[cur.pos.x][cur.pos.y+1])
+            this.doCheck();
+        else {
+            cur.update({x:0,y:1});
+            this.cb.update(cur.pos.x, cur.pos.y);
+        }
     }
+};
+
+GameBoard.prototype.doCheck = function () {
+    var cur = this.current;
+    if (cur) {
+        for(var i=0;i<3;++i) {
+            var p =Vector2D(cur.pos).sub({x:0,y:i});
+            this.table[p.x][p.y] = cur.tiles[i];
+        }
+    }
+    this.state = 1;
+    this.cb.check();
+    this.check();
 };
 
 GameBoard.prototype.check = function (tiles) {
@@ -171,6 +199,7 @@ GameBoard.prototype.check = function (tiles) {
         var that = this;
         var cur = this.current;
         if(!tiles) {
+            if(!cur) return;
             tiles = [];
             for(var i=0;i<3;++i) tiles.push(Vector2D(cur.pos).sub({x:0,y:i}));
         }
@@ -192,6 +221,14 @@ GameBoard.prototype.check = function (tiles) {
     }
 };
 
+GameBoard.prototype.genNext = function (a, b, c) {
+    this.current = this.next;
+    if (this.current) this.current.update({y:0, x:-WIDTH+2});
+    this.next = new Block(this, {y:2, x:WIDTH+1}, a, b, c);
+    this.cb.next(this.next.tiles[0].name,this.next.tiles[1].name,this.next.tiles[2].name);
+    this.state = 0;
+};
+
 GameBoard.prototype.cleanup = function () {
     var list = [];
     for(var x=0;x<WIDTH;++x) {
@@ -207,14 +244,10 @@ GameBoard.prototype.cleanup = function () {
             } else offset++;
         }
     }
-    if(list.length === 0) {
-        this.current = this.next;
-        this.current.update({y:0, x:-WIDTH+2});
-        this.next = new Block(this, {y:2, x:WIDTH+1});
-        this.state = 0;
-    } else {
+    if(this._islocal && list.length === 0) this.genNext();
+    else {
         var that = this;
-        setTimeout(function(){that.check(list)},333)
+        setTimeout(function(){that.check(list)},333);
     }
 };
 
@@ -225,7 +258,14 @@ GameBoard.prototype.input = function () {
         if(KEYS[37]) diff.add({y:0, x: (cur.pos.x ===        0 || this.table[cur.pos.x-1][cur.pos.y]) ? 0 : -1});
         if(KEYS[39]) diff.add({y:0, x: (cur.pos.x ===  WIDTH-1 || this.table[cur.pos.x+1][cur.pos.y]) ? 0 :  1});
         if(KEYS[40]) diff.add({x:0, y: (cur.pos.y === HEIGHT-1 || this.table[cur.pos.x][cur.pos.y+1]) ? 0 :  1});
-        if(diff.x !== 0 || diff.y !== 0) cur.update(diff);
+        if(diff.x !== 0 || diff.y !== 0) {
+            cur.update(diff);
+            this.cb.update(cur.pos.x, cur.pos.y);
+        }
+        if(this._shift) {
+            this.cb.shift(this._shift);
+            this._shift = 0;
+        }
     }
 };
 

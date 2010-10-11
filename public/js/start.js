@@ -26,7 +26,6 @@ var difficulty = 6;
         $("#"+theme).css({border:"5px solid white"});
         theme = name;
         $(this).css({border:"5px solid red"});
-        ws.send("theme="+name);
         return false;
     }).appendTo($(".themes"));
 
@@ -49,7 +48,6 @@ $("#plain").css({border:"5px solid orange"});
         $("#dif"+difficulty).css({border:"5px solid white"});
         difficulty = nr;
         $(this).css({border:"5px solid red"});
-        ws.send("difficulty="+nr);
         return false;
     }).appendTo($(".difficulty")).append(nr);
 
@@ -59,6 +57,12 @@ $("#dif6").css({border:"5px solid orange"});
 
 $("#start").click(function () {
     $(this).attr("href", "/single?theme="+theme+"&difficulty="+difficulty);
+    return true;
+});
+
+$("#join").click(function () {
+    $(this).attr("href", "/multi?theme="+theme+"&difficulty="+difficulty+
+        "&name="+$("#name").val());
     return true;
 });
 
