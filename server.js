@@ -3,7 +3,16 @@
 require.paths.unshift(__dirname + '/lib');
 var express = require('express'),
     connect = require('connect'),
+    socket  = require('spacesocket/lib/spacesocket'),
+    connections = {},
 
+// helper
+
+genId = function () {
+    return (((1+Math.random())*0x10000)|0).toString(16);
+},
+
+// main
 
 _ = function () {
     var app = module.exports = express.createServer();
@@ -32,7 +41,7 @@ _ = function () {
     app.get('/', function(req, res){
         res.render('index.haml', {
             locals: {
-                jsfile: "start",
+                jsfiles: ["start"],
                 title: "Columns",
             }
         });
@@ -41,7 +50,7 @@ _ = function () {
     app.get('/single', function(req, res){
         res.render('single.haml', {
             locals: {
-                jsfile: "columns",
+                jsfiles: ["columns", "single"],
                 title: "Columns",
             }
         });
@@ -51,6 +60,21 @@ _ = function () {
 
     if (!module.parent) {
         app.listen(parseInt(process.env.PORT) || 3000);
+        socket.attach(app, function (conn) {
+            var id = genId();
+            connections[id] = conn;
+            var broadcast = function (msg) {
+                Object.keys(connections).forEach(function (key) {
+                    if (key !== id) connections[key].send(msg);
+                });
+            };
+            conn.on('data', function (msg) {
+                broadcast(msg);
+            });
+            conn.on('end', function () {
+                delete connections[id];
+            });
+        });
         console.log("server listening on port %d ...", app.address().port);
     }
 }();

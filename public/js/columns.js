@@ -17,7 +17,7 @@ $(document).bind('keydown', 'left', keydown);
 $(document).bind('keydown', 'down', keydown);
 $(document).bind('keydown', 'right', keydown);
 
-var getUrlVars = function () {
+getUrlVars = function () {
     var map = {};
     var parts = window.location.search.replace(/[?&]+([^=&]+)(=[^&]*)?/gi,
         function (m, key, value) {
@@ -228,17 +228,5 @@ GameBoard.prototype.input = function () {
         if(diff.x !== 0 || diff.y !== 0) cur.update(diff);
     }
 };
-
-//testing
-
-var test = function () {
-    console.log("testing …");
-    var vars = getUrlVars();
-    var d = vars.difficulty || 6;
-    if (d < 3) d = 3; else if (d > 6) d = 6;
-    var gb = new GameBoard(".gameboard", 23, vars.theme || "plain", d, true);
-};
-
-test();
 
 });
