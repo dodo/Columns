@@ -87,6 +87,12 @@ var listener = function (ev) {
             }
         }
         else console.error("unknown player "+i);
+    } else if (prefix === "cl") {
+        var i = msg.split(":")[1];
+        if (players.hasOwnProperty(i)) {
+            players[i].div.remove();
+            delete players[i];
+        } else console.error("unknown player "+i);
     }
 };
 
@@ -118,10 +124,12 @@ var run = function () {
             var gb = players[i];
             if (gb.current) gb.current.update();
             if (gb.next) gb.next.update();
-            for(var x=0;x<WIDTH;++x) {
-                for(var y=0;y<HEIGHT;++y) {
-                    if(this.table[x][y]) {
-                        this.table[x][y].update();
+            if (gb.table) {
+                for(var x=0;x<WIDTH;++x) {
+                    for(var y=0;y<HEIGHT;++y) {
+                        if(gb.table[x][y]) {
+                            gb.table[x][y].update();
+                        }
                     }
                 }
             }

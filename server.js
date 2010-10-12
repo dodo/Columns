@@ -70,7 +70,7 @@ _ = function () {
     if (!module.parent) {
         app.listen(parseInt(process.env.PORT) || 3000);
         socket.attach(app, function (conn) {
-            var id = genId();
+            var clientid, id = genId();
             connections[id] = conn;
             var broadcast = function (msg) {
                 Object.keys(connections).forEach(function (key) {
@@ -79,8 +79,11 @@ _ = function () {
             };
             conn.on('data', function (msg) {
                 broadcast(msg);
+                if(msg.slice(0, 2) === "me")
+                    clientid = msg.split(":")[1];
             });
             conn.on('close', function () {
+                if (clientid) broadcast("cl:"+clientid);
                 delete connections[id];
             });
         });
