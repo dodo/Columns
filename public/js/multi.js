@@ -118,6 +118,13 @@ var run = function () {
             var gb = players[i];
             if (gb.current) gb.current.update();
             if (gb.next) gb.next.update();
+            for(var x=0;x<WIDTH;++x) {
+                for(var y=0;y<HEIGHT;++y) {
+                    if(this.table[x][y]) {
+                        this.table[x][y].update();
+                    }
+                }
+            }
         });
     }, 23);
 };

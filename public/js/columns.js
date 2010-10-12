@@ -99,10 +99,12 @@ GameBoard = function GameBoard(cb, div, tilesize, theme, difficulty, islocal) {
     this.difficulty = difficulty || 6;
     this.tilesize = tilesize;
     this.cb = cb || Dummy;
+    this._lastkeys = {};
     this.theme = theme;
     this._combos = 0;
     this._points = 0;
     this.points = 0;
+    this._free = {};
     this.gui = {
         div: $(div).css({
                 width: tilesize*(WIDTH+2)+4,
@@ -284,9 +286,9 @@ GameBoard.prototype.input = function () {
     if(this.state === 0) {
         var cur = this.current;
         var diff = Vector2D();
-        if(KEYS[37]) diff.add({y:0, x: (cur.pos.x ===        0 || this.table[cur.pos.x-1][cur.pos.y]) ? 0 : -1});
-        if(KEYS[39]) diff.add({y:0, x: (cur.pos.x ===  WIDTH-1 || this.table[cur.pos.x+1][cur.pos.y]) ? 0 :  1});
-        if(KEYS[40]) diff.add({x:0, y: (cur.pos.y === HEIGHT-1 || this.table[cur.pos.x][cur.pos.y+1]) ? 0 :  1});
+        if(KEYS[37] && this._free[37]) diff.add({y:0, x: (cur.pos.x ===        0 || this.table[cur.pos.x-1][cur.pos.y]) ? 0 : -1});
+        if(KEYS[39] && this._free[39]) diff.add({y:0, x: (cur.pos.x ===  WIDTH-1 || this.table[cur.pos.x+1][cur.pos.y]) ? 0 :  1});
+        if(KEYS[40] && this._free[40]) diff.add({x:0, y: (cur.pos.y === HEIGHT-1 || this.table[cur.pos.x][cur.pos.y+1]) ? 0 :  1});
         if(diff.x !== 0 || diff.y !== 0) {
             cur.update(diff);
             this.cb.update(cur.pos.x, cur.pos.y);
@@ -294,6 +296,11 @@ GameBoard.prototype.input = function () {
         if(this._shift) {
             this.cb.shift(this._shift);
             this._shift = 0;
+        }
+        for(var i=0;i<3;++i) {
+            var n = [37, 39, 40][i];
+            this._free[n] = !(this._lastkeys[n] < KEYS[n]);
+            this._lastkeys[n] = KEYS[n];
         }
     }
 };
