@@ -124,15 +124,7 @@ var run = function () {
             var gb = players[i];
             if (gb.current) gb.current.update();
             if (gb.next) gb.next.update();
-            if (gb.table) {
-                for(var x=0;x<WIDTH;++x) {
-                    for(var y=0;y<HEIGHT;++y) {
-                        if(gb.table[x][y]) {
-                            gb.table[x][y].update();
-                        }
-                    }
-                }
-            }
+            gb.updateTable();
         });
     }, 23);
 };

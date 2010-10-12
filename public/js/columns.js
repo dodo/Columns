@@ -101,6 +101,7 @@ GameBoard = function GameBoard(cb, div, tilesize, theme, difficulty, islocal) {
     this.cb = cb || Dummy;
     this._lastkeys = {};
     this.theme = theme;
+    this._newlines = 0;
     this._combos = 0;
     this._points = 0;
     this.points = 0;
@@ -247,6 +248,24 @@ GameBoard.prototype.check = function (tiles) {
     }
 };
 
+GameBoard.prototype.updateTable = function () {
+    for(var x=0;x<WIDTH;++x) {
+        for(var y=0;y<HEIGHT;++y) {
+            if(this.table[x][y]) {
+                this.table[x][y].pos({x:x,y:y});
+            }
+        }
+    }
+};
+
+GameBoard.prototype.addLine = function (i) {
+    this._newlines += i || 1;
+};
+
+GameBoard.prototype.removeLine = function (i) {
+    this._newlines -= i || 1;
+};
+
 GameBoard.prototype.genNext = function (a, b, c) {
     this.current = this.next;
     if (this.current) this.current.update({y:0, x:-WIDTH+2});
@@ -258,6 +277,29 @@ GameBoard.prototype.genNext = function (a, b, c) {
     this._combos = 0;
     this._points = 0;
     this.state = 0;
+    if (this._newlines) {
+        var tile, add = this._newlines > 0;
+        for(var x=0;x<WIDTH;++x) {
+            for(var i=0,il=Math.abs(this._newlines);i<il;++i) {
+                if(add) {
+                    tile = new Tile(this, "block");
+                    var t = this.table[x].shift();
+                    if (t) t.img.remove();
+                    this.table[x].push(tile);
+                    tile.pos({x:x, y:HEIGHT-1});
+                } else {
+                    if (this.table[x][HEIGHT-1]) {
+                        if(this.table[x][HEIGHT-1].name === "block") {
+                            this.table[x].pop().img.remove();
+                            this.table[x].unshift(undefined);
+                        }
+                    }
+                }
+            }
+        }
+        this.updateTable();
+        this._newlines = 0;
+    }
 };
 
 GameBoard.prototype.cleanup = function () {
