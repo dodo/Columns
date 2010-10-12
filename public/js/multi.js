@@ -29,11 +29,22 @@ var addPlayer = function (i, n, t, d) {
     if (players.hasOwnProperty(i)) {
         players[i].name.text(n);
     } else {
+        var gb, handler = {
+            update:Dummy.udate,
+            next:Dummy.next,
+            check:Dummy.check,
+            shift:Dummy.shift,
+            points: function (c, p) {
+                gb.removeLine(c+p);
+                localgb.addLine(c+p);
+                localgb.forceNext();
+            },
+        };
         var div = $("<div>").attr({class:"gb"+i}).css({display:"inline"});
         var name = $("<p>").text(n).appendTo(div);
         div.appendTo(".previews");
         console.log("add player: "+t+"  "+d);
-        var gb = new GameBoard(undefined,".gb"+i, 9, t, d);
+        gb = new GameBoard(handler,".gb"+i, 9, t, d);
         players[i] = {div:div, name:name, gb:gb};
     }
 };
@@ -111,8 +122,12 @@ var run = function () {
         next: function (a, b, c) {
             ws.send("nx:"+id+":"+a+":"+b+":"+c);
         },
-        points: function () {
+        points: function (c,p) {
             $("#name").text(name+" - "+localgb.points+" points");
+            localgb.removeLine(c+p);
+            Object.keys(players).forEach(function (key) {
+                players[key].gb.addLine(c+p);
+            });
         },
     };
     $("#loading").remove();

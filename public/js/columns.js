@@ -78,6 +78,10 @@ Tile.prototype.pos = function (pos) {
                  left:pos.x*this.size+this._board.offset().left+1});
 };
 
+Tile.prototype.fade = function () {
+    this.img.effect('fade',{},333, function () {$(this).remove()});
+};
+
 
 Block = function Block(gb, pos, a, b, c) {
     this.gb = gb;
@@ -239,7 +243,7 @@ GameBoard.prototype.check = function (tiles) {
             for(var n=0,nl=list[i].length;n<nl;++n) {
                 var p = list[i][n];
                 if(this.table[p.x][p.y]) {
-                    this.table[p.x][p.y].img.effect('fade',{},333, function () {$(this).remove()});
+                    this.table[p.x][p.y].fade();
                     this.table[p.x][p.y] = undefined;
                 }
             }
@@ -264,6 +268,13 @@ GameBoard.prototype.addLine = function (i) {
 
 GameBoard.prototype.removeLine = function (i) {
     this._newlines -= i || 1;
+};
+
+GameBoard.prototype.forceNext = function (a, b, c) {
+    if(this.state === 0) {
+        for(var i=0;i<3;++i) this.current.tiles[i].fade();
+        this.genNext(a, b, c);
+    }
 };
 
 GameBoard.prototype.genNext = function (a, b, c) {
