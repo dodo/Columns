@@ -144,9 +144,11 @@ var start = function () {
     var newname = name;
     ws.send("me:"+id+":"+difficulty+":"+theme);
     ws.send("hs:"+id+":"+name);
+    var oldonclose = ws.onclose;
     var connect = function () {
         name = newname;
         ws.onmessage = listener;
+        ws.onclose = oldonclose;
         $("#name").text(name);
         run();
     };
@@ -184,6 +186,11 @@ ws.onopen = function() {
 };
 ws.onclose = function() {
     console.log('close');
+    if (localgb) {
+        clearInterval(localgb.interval.falling);
+        clearInterval(localgb.interval.input);
+        $("#name").text($("#name").text()+" - connection died.");
+    }
 };
 ws.onerror = function(e) {
     console.error(e);
