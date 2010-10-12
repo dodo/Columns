@@ -74,13 +74,13 @@ _ = function () {
             connections[id] = conn;
             var broadcast = function (msg) {
                 Object.keys(connections).forEach(function (key) {
-                    if (key !== id) connections[key].send(msg);
+                    if (key !== id) connections[key].write(msg);
                 });
             };
             conn.on('data', function (msg) {
                 broadcast(msg);
             });
-            conn.on('end', function () {
+            conn.on('close', function () {
                 delete connections[id];
             });
         });
